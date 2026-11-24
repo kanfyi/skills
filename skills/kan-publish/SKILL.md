@@ -81,9 +81,8 @@ path. Before you publish a built app, set it up so it does:
 - **React Router or TanStack Router, client-only:** use hash routing
   (`createHashRouter`, `createHashHistory()`), or copy `dist/index.html` to
   `dist/<route>/index.html` for each static route.
-- **React Router framework mode:** `ssr: false` with a `prerender` list, and
-  `clientLoader` instead of `loader`. The `.data` files a `loader` writes are
-  dropped at upload, which breaks link navigation to that route.
+- **React Router framework mode:** `ssr: false` with a `prerender` list
+  listing every route; publish `build/client/`, `.data` files included.
 - **TanStack Start:** `prerender: { enabled: true, crawlLinks: true }`; publish
   `dist/client/`.
 - **Next.js:** `output: 'export'`, `trailingSlash: true`,
