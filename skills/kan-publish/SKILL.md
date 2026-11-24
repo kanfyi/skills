@@ -71,28 +71,39 @@ stored in your client's own config — that is the one file it may live in.
 
 ## Built apps (React, Vite, Next)
 
-kan.fyi never rewrites unknown paths to `index.html`, and it ignores a
-site's own `404.html`. Clicking links inside an app works, but a refresh or
-shared link to a deep route answers 404 unless a real file exists at that
-path. Before you publish a built app, set it up so it does:
+Clicking links inside an app always works; the question is whether a refresh or
+a shared link to a deep route (`/about`, `/users/42`) works too. kan.fyi
+ignores a site's own `404.html`.
 
+- **Browser-history router (React Router, TanStack Router, Vue Router), React
+  Router framework SPA mode:** switch on the site's **single-page-app
+  fallback**: `update_site {id, spa: true}`, `PATCH /api/sites/{id}`
+  `{"spa": true}`, `POST /api/publish?site={id}&spa=on`, `kan publish dist
+  --site <id> --spa on`, or `spa: on` in the action. Every address with no file
+  behind it then opens the top-level `index.html`. It is off by default and
+  stays as set across publishes. It never applies to a path whose last part
+  has a dot (`/app.js`, `/users/john.doe`), which stays a 404, and it always
+  serves the **top-level** `index.html`, so put the app at the top of the site.
+  Give the router a not-found route.
 - **Vite + React, no router:** works with no changes. In a sub-folder use an
   absolute `base: '/folder/'`, never `base: './'`.
-- **React Router or TanStack Router, client-only:** use hash routing
-  (`createHashRouter`, `createHashHistory()`), or copy `dist/index.html` to
+- **Without the fallback:** use hash routing (`createHashRouter`,
+  `createHashHistory()`), or copy `dist/index.html` to
   `dist/<route>/index.html` for each static route.
-- **React Router framework mode:** `ssr: false` with a `prerender` list
-  listing every route; publish `build/client/`, `.data` files included.
+- **React Router framework mode, pre-rendered:** `ssr: false` with a
+  `prerender` list listing every route; publish `build/client/`, `.data` files
+  included.
 - **TanStack Start:** `prerender: { enabled: true, crawlLinks: true }`; publish
-  `dist/client/`.
+  `dist/client/`. In SPA mode, copy `dist/client/_shell.html` to
+  `dist/client/index.html` and switch the fallback on.
 - **Next.js:** `output: 'export'`, `trailingSlash: true`,
   `images: { unoptimized: true }`; publish `out/`. Without `trailingSlash` every
   route address except `/` (such as `/about`) is a 404 on a direct visit.
 
 Zip the **contents** of the build folder, not the folder itself
 (`cd dist && zip -r ../site.zip .`), so `index.html` is at the top, and send it
-through an upload ticket. Without hash routing, dynamic routes work on a direct
-visit only for ids that were pre-rendered or copied. Full
+through an upload ticket. Without hash routing or the fallback, dynamic routes work
+on a direct visit only for ids that were pre-rendered or copied. Full
 recipes: https://docs.kan.fyi/reference/react-and-vite-apps/
 
 ## Publishing over MCP
