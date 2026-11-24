@@ -5,7 +5,7 @@ description: Publish static sites to kan.fyi from an AI agent. Use when asked to
 
 # Publishing to kan.fyi
 
-kan.fyi hosts static sites: files in, a live site at `https://<id>.kan.fyi` out.
+kan.fyi hosts static sites: files in, a live site at `https://<id>.onkan.app` out.
 Ids are eight characters, minted by the server, never chosen. Every publish
 authenticates with a personal access token (`kan_pat_…` — see Credential
 rules).
@@ -69,6 +69,33 @@ stored in your client's own config — that is the one file it may live in.
   10-site limit is emailed when it rises. Publishing to an existing id **replaces all of its content** —
   there is no merge.
 
+## Built apps (React, Vite, Next)
+
+kan.fyi never rewrites unknown paths to `index.html`, and it ignores a
+site's own `404.html`. Clicking links inside an app works, but a refresh or
+shared link to a deep route answers 404 unless a real file exists at that
+path. Before you publish a built app, set it up so it does:
+
+- **Vite + React, no router:** works with no changes. In a sub-folder use an
+  absolute `base: '/folder/'`, never `base: './'`.
+- **React Router or TanStack Router, client-only:** use hash routing
+  (`createHashRouter`, `createHashHistory()`), or copy `dist/index.html` to
+  `dist/<route>/index.html` for each static route.
+- **React Router framework mode:** `ssr: false` with a `prerender` list, and
+  `clientLoader` instead of `loader`. The `.data` files a `loader` writes are
+  dropped at upload, which breaks link navigation to that route.
+- **TanStack Start:** `prerender: { enabled: true, crawlLinks: true }`; publish
+  `dist/client/`.
+- **Next.js:** `output: 'export'`, `trailingSlash: true`,
+  `images: { unoptimized: true }`; publish `out/`. Without `trailingSlash` every
+  route address except `/` (such as `/about`) is a 404 on a direct visit.
+
+Zip the **contents** of the build folder, not the folder itself
+(`cd dist && zip -r ../site.zip .`), so `index.html` is at the top, and send it
+through an upload ticket. Without hash routing, dynamic routes work on a direct
+visit only for ids that were pre-rendered or copied. Full
+recipes: https://docs.kan.fyi/reference/react-and-vite-apps/
+
 ## Publishing over MCP
 
 - `create_site {files}` — a new site. The call blocks a few seconds and
@@ -124,7 +151,7 @@ sites whatever their visibility or status. Anything else — someone else's
 private site, a site awaiting review, one that was taken down, one that never
 existed — answers the same "not found". That is not a bug to work around.
 
-Two uses: someone shares a `<id>.kan.fyi` URL and you want to know what is on
+Two uses: someone shares a `<id>.onkan.app` URL and you want to know what is on
 it, and picking up your own site in a later conversation to change it. For the
 second, read before you write: `update_site` **replaces everything**, so
 publishing only the page you were asked to fix deletes the rest of the site.
